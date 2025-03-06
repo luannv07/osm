@@ -1,0 +1,15 @@
+Users - Orders (1-N)
+Users - Carts (1-1)
+Users - Reviews (1-N)
+Roles - Users (1-N)
+Roles - Permissions  (1-N) // gán quyền mặc định
+Users - User_Permissions (1-N) // thêm quyền cho users đặc biệt
+Categories - Products (1-N)
+Products - Orders_Item (1-N)
+Orders - Orders_Item (1-N)
+Orders - Payments (1-1)
+Carts - CartDetails (1-N) 
+Products - CartDetails (1-N)
+Products - Reviews (1-N)
+
+// cart details dùng để lưu chi tiết 1 sản phẩm trong 1 giỏ (số lượng, tên sp....)
