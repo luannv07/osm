@@ -32,7 +32,7 @@ public class UserEntity {
   private String fullName;
 
   @Lob
-  @Column(name = "avatar")
+  @Column(name = "avatar", columnDefinition = "LONGBLOB")
   private byte[] avatar;
 
   @Column(name = "created_at")

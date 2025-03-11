@@ -1,5 +1,6 @@
 package com.luannv.order.mappers;
 
-public class GenericMapper<Entity, RequestDTO, ResponseDTO> {
-
+public interface GenericMapper<Entity, RequestDTO, ResponseDTO> {
+	Entity toEntity(RequestDTO requestDTO);
+	ResponseDTO toResponseDTO(Entity entity);
 }

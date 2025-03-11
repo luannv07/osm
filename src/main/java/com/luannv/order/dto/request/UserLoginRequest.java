@@ -3,7 +3,7 @@ package com.luannv.order.dto.request;
 import lombok.Getter;
 
 @Getter
-public class UserLoginRequestDTO {
+public class UserLoginRequest {
   private String username;
   private String password;
 }
