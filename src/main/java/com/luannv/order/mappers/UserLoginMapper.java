@@ -5,7 +5,7 @@ import com.luannv.order.dto.response.UserResponse;
 import com.luannv.order.models.UserEntity;
 import org.springframework.stereotype.Component;
 
-import static com.luannv.order.constants.ConstantUrl.avatarPath;
+import static com.luannv.order.constants.UrlConstant.avatarPath;
 
 @Component
 public class UserLoginMapper implements GenericMapper<UserEntity, UserLoginRequest, UserResponse> {

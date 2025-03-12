@@ -8,20 +8,15 @@ import java.net.URL;
 public class ImageUtils {
 	public static byte[] getImageBytes(String imageUrl) throws IOException {
 		URL url = new URL(imageUrl);
+		try (InputStream in = url.openStream();
+				 ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
 
-		ByteArrayOutputStream output = new ByteArrayOutputStream();
-
-		try (InputStream stream = url.openStream()) {
-			byte[] buffer = new byte[4096];
-
-			while (true) {
-				int bytesRead = stream.read(buffer);
-				if (bytesRead < 0) {
-					break;
-				}
-				output.write(buffer, 0, bytesRead);
+			byte[] data = new byte[8192]; // Buffer 8KB
+			int bytesRead;
+			while ((bytesRead = in.read(data)) != -1) {
+				buffer.write(data, 0, bytesRead);
 			}
+			return buffer.toByteArray();
 		}
-		return output.toByteArray();
 	}
 }

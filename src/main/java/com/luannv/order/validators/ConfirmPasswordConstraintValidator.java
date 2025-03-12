@@ -28,7 +28,7 @@ public class ConfirmPasswordConstraintValidator implements ConstraintValidator<C
 //
 //			Object fValue = first.get(value);
 //			Object sValue = second.get(value);
-
+			System.out.println("Loi da vao day");
 			Object fValue = BeanUtils.getPropertyDescriptor(value.getClass(), firstField).getReadMethod().invoke(value);
 			Object sValue = BeanUtils.getPropertyDescriptor(value.getClass(), secondField).getReadMethod().invoke(value);
 			if (fValue == null || sValue == null || !fValue.equals(sValue)) {

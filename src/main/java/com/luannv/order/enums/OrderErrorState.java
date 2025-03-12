@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
+// error
 @Getter
 @AllArgsConstructor
 public enum OrderErrorState {
@@ -19,8 +19,9 @@ public enum OrderErrorState {
   USERNAME_USED(1008, "Username has been used.", HttpStatus.NOT_ACCEPTABLE),
   EMAIL_USED(1008, "Email has been used.", HttpStatus.NOT_ACCEPTABLE),
   USER_NOT_FOUND(1009, "Username not found", HttpStatus.BAD_REQUEST),
-  UPLOAD_AVATAR_ERROR(1010, "Failed to upload image!", HttpStatus.BAD_REQUEST)
-  ;
+  UPLOAD_AVATAR_ERROR(1010, "Failed to upload image!", HttpStatus.BAD_REQUEST),
+  USER_NOT_EDITABLE(1011, "You have not permissions to update your username.", HttpStatus.BAD_REQUEST),
+	OLD_PASSWORD_INVALID(1012, "Old password is not correct", HttpStatus.NOT_ACCEPTABLE);
 
   private final int code;
   private final String messages;

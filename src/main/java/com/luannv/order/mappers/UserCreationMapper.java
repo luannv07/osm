@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 
-import static com.luannv.order.constants.ConstantUrl.avatarPath;
+import static com.luannv.order.constants.UrlConstant.avatarPath;
 
 @Component
 public class UserCreationMapper implements GenericMapper<UserEntity, UserCreationRequest, UserResponse> {

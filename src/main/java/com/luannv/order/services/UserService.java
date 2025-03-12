@@ -1,23 +1,33 @@
 package com.luannv.order.services;
 
+import com.luannv.order.dto.request.UserUpdateRequest;
 import com.luannv.order.dto.response.UserResponse;
 import com.luannv.order.enums.OrderErrorState;
+import com.luannv.order.exceptions.MultipleExceptions;
 import com.luannv.order.exceptions.SingleException;
 import com.luannv.order.mappers.UserMapper;
 import com.luannv.order.models.UserEntity;
 import com.luannv.order.repositories.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class UserService {
 	private final UserRepository userRepository;
 	private final UserMapper userMapper;
-	public UserService(UserRepository userRepository, UserMapper userMapper) {
+	private final PasswordEncoder passwordEncoder;
+
+	public UserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
 		this.userRepository = userRepository;
 		this.userMapper = userMapper;
+		this.passwordEncoder = passwordEncoder;
 	}
 
 	public byte[] getUserAvatar(String username) {
@@ -30,5 +40,50 @@ public class UserService {
 		List<UserResponse> users = new ArrayList<>();
 		userRepository.findAll().forEach(user -> users.add(userMapper.toResponseDTO(user)));
 		return users;
+	}
+
+	private UserEntity getUserEntityByUsername(String username) {
+		return userRepository.findByUsername(username).orElseThrow(() -> new SingleException(OrderErrorState.USER_NOT_FOUND));
+	}
+
+	public UserResponse getByUsername(String username) {
+		UserEntity user = getUserEntityByUsername(username);
+		return userMapper.toResponseDTO(user);
+	}
+
+	public UserResponse updateUser(String username, UserUpdateRequest userUpdateRequest
+					, MultipartFile multipartFile) throws IOException {
+		UserEntity user = getUserEntityByUsername(username);
+		Map<String, String> errs = new HashMap<>();
+
+		if (userUpdateRequest.getFullName() != null && !userUpdateRequest.getFullName().isEmpty() && userUpdateRequest.getFullName() != user.getFullName())
+			user.setFullName(userUpdateRequest.getFullName());
+		if (multipartFile != null && !multipartFile.isEmpty())
+			user.setAvatar(multipartFile.getBytes());
+		if (userUpdateRequest.getOldPassword() != null
+						&& !userUpdateRequest.getOldPassword().isEmpty()) {
+			if (passwordEncoder.matches(userUpdateRequest.getOldPassword(), user.getPassword())) {
+				if (userUpdateRequest.getNewPassword() == null || userUpdateRequest.getNewPassword().isEmpty())
+					errs.put("newPassword", OrderErrorState.FIELD_NOT_EMPTY.getMessages());
+				if (userUpdateRequest.getConfirmPassword() == null || userUpdateRequest.getConfirmPassword().isEmpty())
+					errs.put("confirmPassword", OrderErrorState.FIELD_NOT_EMPTY.getMessages());
+				else if (!userUpdateRequest.getConfirmPassword().equals(userUpdateRequest.getNewPassword()))
+					errs.put("confirmPassword", OrderErrorState.CONFIRM_PASSWORD_INVALID.getMessages());
+				else
+					user.setPassword(passwordEncoder.encode(userUpdateRequest.getNewPassword()));
+			} else {
+				errs.put("oldPassword", OrderErrorState.OLD_PASSWORD_INVALID.getMessages());
+			}
+		}
+		errs.forEach((key, value) -> System.out.println(key + " " + value));
+		if (!errs.isEmpty())
+			throw new MultipleExceptions(errs);
+		return userMapper.toResponseDTO(userRepository.save(user));
+	}
+
+	public String deleteUserByUsername(String username) {
+		UserEntity user = getUserEntityByUsername(username);
+		userRepository.delete(user);
+		return "Deleted " + username;
 	}
 }

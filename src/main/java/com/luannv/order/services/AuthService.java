@@ -2,6 +2,7 @@ package com.luannv.order.services;
 
 import com.luannv.order.dto.request.UserCreationRequest;
 import com.luannv.order.dto.request.UserLoginRequest;
+import com.luannv.order.dto.response.ApiResponse;
 import com.luannv.order.dto.response.UserResponse;
 import com.luannv.order.enums.OrderErrorState;
 import com.luannv.order.exceptions.MultipleExceptions;
@@ -12,6 +13,7 @@ import com.luannv.order.models.UserEntity;
 import com.luannv.order.repositories.UserRepository;
 import com.luannv.order.utils.ImageUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.luannv.order.constants.ConstantUrl.defaultAvatarPath;
+import static com.luannv.order.constants.UrlConstant.defaultAvatarPath;
 
 @Slf4j
 @Service
@@ -43,15 +45,15 @@ public class AuthService {
 	public ResponseEntity<?> checkLogin(UserLoginRequest requestDTO) {
 		UserEntity userEntity = userRepository.findByUsername(requestDTO.getUsername())
 						.orElseThrow(() -> new SingleException(OrderErrorState.LOGIN_FAILED));
-		if (!passwordEncoder.matches(requestDTO.getPassword(), userEntity.getPassword()))
+		if (requestDTO.getUsername() == null || requestDTO.getPassword() == null || !passwordEncoder.matches(requestDTO.getPassword(), userEntity.getPassword()))
 			throw new SingleException(OrderErrorState.LOGIN_FAILED);
 		UserResponse userResponseDTO = userLoginMapper.toResponseDTO(userEntity);
 		return ResponseEntity.ok().body(userResponseDTO);
 	}
 
 	public ResponseEntity<?> userCreation(UserCreationRequest request,
-																					BindingResult bindingResult,
-																					MultipartFile multipartFile) throws IOException {
+																				BindingResult bindingResult,
+																				MultipartFile multipartFile) throws IOException {
 		Map<String, String> errorsResponse = new HashMap<>();
 		bindingResult.getFieldErrors().forEach(err ->
 						errorsResponse.put(err.getField(), OrderErrorState.valueOf(err.getDefaultMessage()).getMessages()));
@@ -60,12 +62,16 @@ public class AuthService {
 			avatar = ImageUtils.getImageBytes(defaultAvatarPath);
 		else
 			avatar = multipartFile.getBytes();
-		if (errorsResponse.isEmpty()){
+		if (errorsResponse.isEmpty()) {
 			UserEntity user = userCreationMapper.toEntity(request);
 			user.setAvatar(avatar);
 			userRepository.save(user);
 			UserResponse userResponse = userCreationMapper.toResponseDTO(user);
-			return ResponseEntity.ok().body(userResponse);
+			return ResponseEntity.ok().body(ApiResponse.builder()
+							.code(HttpStatus.OK.value())
+							.result(userResponse)
+							.message(System.currentTimeMillis())
+							.build());
 		}
 		throw new MultipleExceptions(errorsResponse);
 	}
