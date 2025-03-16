@@ -3,6 +3,7 @@ package com.luannv.order.services;
 import com.luannv.order.dto.request.UserCreationRequest;
 import com.luannv.order.dto.request.UserLoginRequest;
 import com.luannv.order.dto.response.ApiResponse;
+import com.luannv.order.dto.response.TokenCheckValidResponse;
 import com.luannv.order.dto.response.UserResponse;
 import com.luannv.order.enums.OrderErrorState;
 import com.luannv.order.exceptions.MultipleExceptions;
@@ -12,7 +13,9 @@ import com.luannv.order.mappers.UserLoginMapper;
 import com.luannv.order.models.UserEntity;
 import com.luannv.order.repositories.UserRepository;
 import com.luannv.order.utils.ImageUtils;
+import com.nimbusds.jose.JOSEException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,14 +24,20 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.luannv.order.constants.UrlConstant.defaultAvatarPath;
+import static com.luannv.order.utils.JwtUtils.generateToken;
+import static com.luannv.order.utils.JwtUtils.isValidToken;
 
 @Slf4j
 @Service
 public class AuthService {
+	@Value("${jwt.secretKey}")
+	private String secretKey;
+
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final UserLoginMapper userLoginMapper;
@@ -42,13 +51,17 @@ public class AuthService {
 		this.userCreationMapper = userCreationMapper;
 	}
 
-	public ResponseEntity<?> checkLogin(UserLoginRequest requestDTO) {
+	public ResponseEntity<?> checkLogin(UserLoginRequest requestDTO) throws JOSEException {
 		UserEntity userEntity = userRepository.findByUsername(requestDTO.getUsername())
 						.orElseThrow(() -> new SingleException(OrderErrorState.LOGIN_FAILED));
 		if (requestDTO.getUsername() == null || requestDTO.getPassword() == null || !passwordEncoder.matches(requestDTO.getPassword(), userEntity.getPassword()))
 			throw new SingleException(OrderErrorState.LOGIN_FAILED);
 		UserResponse userResponseDTO = userLoginMapper.toResponseDTO(userEntity);
-		return ResponseEntity.ok().body(userResponseDTO);
+		String token = generateToken(userEntity, secretKey);
+		return ResponseEntity.ok().body(ApiResponse.builder()
+						.result(token)
+						.code(HttpStatus.OK.value())
+						.build());
 	}
 
 	public ResponseEntity<?> userCreation(UserCreationRequest request,
@@ -74,5 +87,15 @@ public class AuthService {
 							.build());
 		}
 		throw new MultipleExceptions(errorsResponse);
+	}
+
+	public ResponseEntity<?> checkValidToken(String token) throws ParseException, JOSEException {
+		if (token == null || !isValidToken(token, secretKey))
+			throw new SingleException(OrderErrorState.TOKEN_INVALID);
+		return ResponseEntity.ok().body(TokenCheckValidResponse.builder()
+						.code(200)
+						.result(true)
+						.timestamp(System.currentTimeMillis())
+						.build());
 	}
 }

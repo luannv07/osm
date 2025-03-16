@@ -1,5 +1,6 @@
 package com.luannv.order.models;
 
+import com.luannv.order.dto.request.TokenRequest;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -54,4 +55,7 @@ public class UserEntity {
 
   @OneToOne(mappedBy = "userCart", cascade = CascadeType.ALL, orphanRemoval = true)
   private Cart cart;
+
+  @OneToMany(mappedBy = "userJwtToken")
+  private List<JwtToken> tokens;
 }
