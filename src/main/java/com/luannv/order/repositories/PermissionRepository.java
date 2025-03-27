@@ -8,4 +8,7 @@ import com.luannv.order.models.Permission;
 @Repository
 public interface PermissionRepository extends JpaRepository<Permission, Integer> {
 
+  Permission findByPermissionName(String permissonName);
+
+	boolean existsByPermissionName(String permissionName);
 }

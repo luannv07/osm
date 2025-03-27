@@ -10,6 +10,7 @@ import com.luannv.order.models.UserEntity;
 import com.luannv.order.repositories.UserRepository;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,10 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -65,31 +63,27 @@ public class UserService {
 		Map<String, String> errs = new HashMap<>();
 
 		if (userUpdateRequest.getFullName() != null && !userUpdateRequest.getFullName().isEmpty()
-						&& !userUpdateRequest.getFullName().equals(user.getFullName())) {
+						&& !userUpdateRequest.getFullName().equals(user.getFullName()))
 			user.setFullName(userUpdateRequest.getFullName());
-		}
-		if (multipartFile != null && !multipartFile.isEmpty()) {
+		if (multipartFile != null && !multipartFile.isEmpty())
 			user.setAvatar(multipartFile.getBytes());
-		}
 		if (userUpdateRequest.getOldPassword() != null && !userUpdateRequest.getOldPassword().isEmpty()) {
 			if (passwordEncoder.matches(userUpdateRequest.getOldPassword(), user.getPassword())) {
-				if (userUpdateRequest.getNewPassword() == null || userUpdateRequest.getNewPassword().isEmpty()) {
+				if (userUpdateRequest.getNewPassword() == null || userUpdateRequest.getNewPassword().isEmpty())
 					errs.put("newPassword", OrderErrorState.FIELD_NOT_EMPTY.getMessages());
-				}
-				if (userUpdateRequest.getConfirmPassword() == null || userUpdateRequest.getConfirmPassword().isEmpty()) {
+				if (userUpdateRequest.getConfirmPassword() == null || userUpdateRequest.getConfirmPassword().isEmpty())
 					errs.put("confirmPassword", OrderErrorState.FIELD_NOT_EMPTY.getMessages());
-				} else if (!userUpdateRequest.getConfirmPassword().equals(userUpdateRequest.getNewPassword())) {
+				else if (!userUpdateRequest.getConfirmPassword().equals(userUpdateRequest.getNewPassword()))
 					errs.put("confirmPassword", OrderErrorState.CONFIRM_PASSWORD_INVALID.getMessages());
-				} else {
+				else
 					user.setPassword(passwordEncoder.encode(userUpdateRequest.getNewPassword()));
-				}
 			} else {
 				errs.put("oldPassword", OrderErrorState.OLD_PASSWORD_INVALID.getMessages());
 			}
 		}
-		if (!errs.isEmpty()) {
+		if (!errs.isEmpty())
 			throw new MultipleExceptions(errs);
-		}
+
 		return userMapper.toResponseDTO(userRepository.save(user));
 	}
 
@@ -100,4 +94,15 @@ public class UserService {
 		return "Deleted " + username;
 	}
 
+	@PostAuthorize("returnObject.username == authentication.name")
+	public UserResponse getMyInfo() {
+		System.out.println(">>> Run here");
+		Authentication obj = SecurityContextHolder.getContext().getAuthentication();
+		if (obj == null)
+			throw new SingleException(OrderErrorState.UNAUTHENTICATED);
+		String name = obj.getName();
+		UserEntity user = userRepository.findByUsername(name)
+						.orElseThrow(() -> new SingleException(OrderErrorState.USER_NOT_FOUND));
+		return userMapper.toResponseDTO(user);
+	}
 }

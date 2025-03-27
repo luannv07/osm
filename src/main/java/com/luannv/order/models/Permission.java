@@ -1,9 +1,16 @@
 package com.luannv.order.models;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Getter
@@ -21,6 +28,7 @@ public class Permission {
   private String permissionName;
   // relations
   @OneToMany(mappedBy = "permission", cascade = CascadeType.ALL)
+  @JsonIgnore
   private List<RolePermission> rolePermissions;
 
 }

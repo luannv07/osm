@@ -1,5 +1,6 @@
 package com.luannv.order.services;
 
+import com.luannv.order.configurations.SecurityConfig;
 import com.luannv.order.dto.request.UserCreationRequest;
 import com.luannv.order.dto.request.UserLoginRequest;
 import com.luannv.order.dto.response.ApiResponse;
@@ -19,10 +20,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.HashMap;
@@ -37,14 +45,16 @@ import static com.luannv.order.utils.JwtUtils.isValidToken;
 public class AuthService {
 	@Value("${jwt.secretKey}")
 	private String secretKey;
+	private final SecurityConfig securityConfig;
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final UserLoginMapper userLoginMapper;
 	private final UserCreationMapper userCreationMapper;
 
-	public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+	public AuthService(SecurityConfig securityConfig, UserRepository userRepository, PasswordEncoder passwordEncoder,
 										 UserLoginMapper userLoginMapper, UserCreationMapper userCreationMapper) {
+		this.securityConfig = securityConfig;
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.userLoginMapper = userLoginMapper;
@@ -98,4 +108,5 @@ public class AuthService {
 						.timestamp(System.currentTimeMillis())
 						.build());
 	}
+
 }

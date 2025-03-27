@@ -22,8 +22,10 @@ public enum OrderErrorState {
   USER_NOT_EDITABLE(1011, "You do not have permission to update your username.", HttpStatus.BAD_REQUEST),
   OLD_PASSWORD_INVALID(1012, "Old password is incorrect.", HttpStatus.NOT_ACCEPTABLE),
   TOKEN_INVALID(1013, "Token is either null or invalid.", HttpStatus.NOT_ACCEPTABLE),
-  ROLE_FORBIDDEN(1014, "You do not have permission to access this resource!", HttpStatus.FORBIDDEN);
-
+  ROLE_FORBIDDEN(1014, "You do not have permission to access this resource!", HttpStatus.FORBIDDEN),
+  PERMISSION_EXISTED(1015, "Permission existed!", HttpStatus.BAD_REQUEST),
+  PERMISSION_NOTFOUND(1016, "Permission not found!", HttpStatus.BAD_REQUEST)
+  ;
   private final int code;
   private final String messages;
   private final HttpStatus httpStatus;

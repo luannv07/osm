@@ -53,4 +53,8 @@ public class UserController {
 										.result(System.currentTimeMillis())
 						.build());
 	}
+	@GetMapping("/my-info")
+	public ResponseEntity<?> getMyInfo() {
+		return ResponseEntity.ok().body(userService.getMyInfo());
+	}
 }
